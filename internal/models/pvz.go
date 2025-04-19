@@ -10,3 +10,15 @@ type PVZWithReceptions struct {
 	PVZ        PVZ
 	Receptions []ReceptionWithProducts
 }
+
+type FlatRow struct {
+	PVZId            string
+	City             string
+	RegistrationDate string
+	ReceptionId      string
+	ReceptionDate    string
+	Status           string
+	ProductId        string
+	ProductDate      string
+	ProductType      string
+}

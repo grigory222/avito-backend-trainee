@@ -2,19 +2,20 @@ package usecases
 
 import (
 	"github.com/grigory222/avito-backend-trainee/internal/models"
+	"time"
 )
 
 type ProductRepository interface {
 	AddProduct(productType, receptionId string) (models.Product, error)
 	GetLastProduct(recId string) (models.Product, error)
-	DeleteProduct(prodId string) error
+	DeleteProductById(id string) error
 	//GetProductsByReceptionIds(recIds []string, startDate, endDate *time.Time) ([]models.Product, error)
 }
 
 type PVZRepository interface {
 	AddPVZ(city string) (models.PVZ, error)
 	GetPVZById(pvzId string) (models.PVZ, error)
-	GetPVZsWithPagination(offset, limit int) ([]models.PVZ, error)
+	GetFlatPVZRows(startDate, endDate time.Time, offset, limit int) ([]models.FlatRow, error)
 	//GetAllPVZs(ctx context.Context) ([]models.PVZ, error)
 }
 

@@ -75,76 +75,71 @@ func (ps *PVZService) DeleteLastProduct(pvzId string) error {
 	}
 
 	// удалить товар
-	err = ps.prodRepo.DeleteProduct(product.Id)
+	err = ps.prodRepo.DeleteProductById(product.Id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// GetPVZWithPagination выводить только те ПВЗ и всю информацию по ним, которые в указанный диапазон времени проводили приёмы товаров
 func (ps *PVZService) GetPVZWithPagination(startDate, endDate *time.Time, page, limit int) ([]models.PVZWithReceptions, error) {
-	// выводить только те ПВЗ и всю информацию по ним, которые в указанный диапазон времени проводили приёмы товаров
+	offset := (page - 1) * limit
+	rows, err := ps.pvzRepo.GetFlatPVZRows(*startDate, *endDate, offset, limit)
+	if err != nil {
+		return nil, err
+	}
 
-	// сделать тройной джойн
-	// сделать map[pvz]reception
+	pvzMap := make(map[string]*models.PVZWithReceptions)
+	for _, row := range rows {
+		// найти или создать ПВЗ
+		pvz, ok := pvzMap[row.PVZId]
+		if !ok {
+			pvz = &models.PVZWithReceptions{
+				PVZ: models.PVZ{
+					Id:               row.PVZId,
+					City:             row.City,
+					RegistrationDate: row.RegistrationDate,
+				},
+			}
+			pvzMap[row.PVZId] = pvz
+		}
 
-	// либо 2.
-	// Получить ПВЗ
-	// Для каждого ПВЗ получить приёмки
-	// Для каждой приёмки получить товары
+		// найти или создать приёмку
+		var recPtr *models.ReceptionWithProducts
+		for i := range pvz.Receptions {
+			if pvz.Receptions[i].Reception.Id == row.ReceptionId {
+				recPtr = &pvz.Receptions[i]
+				break
+			}
+		}
+		if recPtr == nil {
+			newRec := models.ReceptionWithProducts{
+				Reception: models.Reception{
+					Id:       row.ReceptionId,
+					DateTime: row.ReceptionDate,
+					PVZId:    row.PVZId,
+					Status:   row.Status,
+				},
+			}
+			pvz.Receptions = append(pvz.Receptions, newRec)
+			recPtr = &pvz.Receptions[len(pvz.Receptions)-1]
+		}
 
-	// 1. получить товары в указанном диапазоне и ПВЗ id
-	// 2. сделать список уникальных ресепшн ид
-	// 3. join pvz + receptions С ПАГИНАЦЕЙ
-	// 4. для каждого ПВЗ вставить reception
-	// 5. пройтись по всем товарам и вставить в соотв. пвз и ресепшн
+		// добавить товар
+		recPtr.Products = append(recPtr.Products, models.Product{
+			Id:          row.ProductId,
+			DateTime:    row.ProductDate,
+			Type:        row.ProductType,
+			ReceptionId: row.ReceptionId,
+		})
+	}
 
-	// 1. products := GetProductsWithTime(startDate, endDate) ([]models.ProductWithPVZId, error)
-	// ProductWithPVZId {
-	// 	Id          string
-	//	DateTime    string
-	//	Type        string
-	//	ReceptionId string
-	//  PVZId		string
-	//}
+	// собрать слайс
+	var result []models.PVZWithReceptions
+	for _, pvz := range pvzMap {
+		result = append(result, *pvz)
+	}
 
-	// 2.
-	// receptionsMap := make(map[reception_id] int)
-	// for product := range products {
-	//	receptionsMap[product.ReceptionId] = product.PVZId
-	//}
-	// uniqueReceptions := make([]int, 0, len(receptionsMap))
-	// for key, _ := range receptionsMap {
-	//	uniqueReceptions = append(uniqueReceptions, key)
-	//}
-
-	// 3.
-	// GetPVZsByReceptionIds(receptionIds []int) ([]models.PVZAndReception, error)
-	// pvzsAndReceptions := GetPVZsByReceptions(uniqueReceptions)
-	// type PVZAndReception struct {
-	//	PVZ        PVZ
-	//	Reception  Reception
-	//}
-
-	// 4.
-	//type PVZWithReceptions struct {
-	//	PVZ        PVZ
-	//	Receptions []ReceptionWithProducts
-	//}
-	// pvzWithReception := make([]PVZWithReceptions, 0)
-	// pvzMap := make(map[pvzId]PVZWithReceptions, 0)
-	//for p := range pvzsAndReceptions {
-	//  if _, ok := pvzMap[p.PVZ.Id]; !ok{
-	// pvzMap[p.PVZ.Id] := PVZWithReceptions{PVZ{...}, []ReceptionWithProducts{{...}}}
-	//}  else {
-	//	pvzMap[p.PVZ.Id].Receptions = append(pvzMap[p.PVZ.Id].Receptions, ReceptionWithProducts{...})
-	//}
-	//
-	//}
-
-	// 5.
-	// for p := range products {
-	//	pvzMap[p.PVZId].ReceptionWithProducts.Products = append(pvzMap[p.PVZId].ReceptionWithProducts.Products, Product{p...., p....})
-	//}
-
+	return result, nil
 }

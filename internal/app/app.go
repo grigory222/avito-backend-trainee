@@ -7,6 +7,7 @@ import (
 	"github.com/grigory222/avito-backend-trainee/internal/db"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers"
 	"github.com/grigory222/avito-backend-trainee/internal/repo"
+	"github.com/grigory222/avito-backend-trainee/internal/usecases"
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"
 	"net/http"
 	"os"
@@ -36,8 +37,9 @@ func Run(cfg *config.Config) {
 	l.Debug("Repositories created: ", productRepo, userRepo, pvzRepo, receptionRepo)
 
 	// создать сервисы
+	productService := usecases.NewProductService(productRepo, receptionRepo, pvzRepo)
 
-	srv := handlers.NewServer(cfg)
+	srv := handlers.NewServer(cfg, l, productService)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
