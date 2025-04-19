@@ -22,6 +22,7 @@ type Claims struct {
 type contextKey string
 
 const UserIDKey = contextKey("user_id")
+const ClaimsKey = contextKey("claims")
 
 func writeError(w http.ResponseWriter, status int, errorDto dto.ErrorDto) {
 	w.Header().Set("Content-Type", "application/json")
@@ -67,7 +68,7 @@ func AuthenticateMiddleware(secret string) func(http.Handler) http.Handler {
 			}
 
 			// Кладём user_id в контекст
-			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
 			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
