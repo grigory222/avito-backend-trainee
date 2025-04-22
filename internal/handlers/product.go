@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/grigory222/avito-backend-trainee/internal/handlers/common"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/dto"
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"
 	"net/http"
@@ -34,21 +35,28 @@ func (ph *ProductHandler) Hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *ProductHandler) AddProductToReception(w http.ResponseWriter, r *http.Request) {
-	var addProductRequestDto dto.AddProductRequestDto
-
-	w.Header().Add("Content-Type", "application/json")
-	err := json.NewDecoder(r.Body).Decode(&addProductRequestDto)
-	if err != nil {
-		ph.logger.Error("failed to decode request body ", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		errorDto := &dto.ErrorDto{
-			Message: "Некорректные данные",
-		}
-		err = json.NewEncoder(w).Encode(errorDto)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	addProductRequestDto, ok := r.Context().Value(common.DTOKey).(*dto.AddProductRequestDto)
+	if !ok || addProductRequestDto == nil {
+		ph.logger.Error("AddProductToReception called without addProductRequestDto")
+		common.WriteError(w, http.StatusInternalServerError, dto.UnauthorizedError)
 		return
 	}
 
+	product, err := ph.service.AddProduct(addProductRequestDto.Type, addProductRequestDto.PVZId)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: err.Error()})
+		return
+	}
+
+	addProductResponseDto := &dto.AddProductResponseDto{
+		Id:          product.Id,
+		DateTime:    product.DateTime,
+		Type:        product.Type,
+		ReceptionId: product.ReceptionId,
+	}
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(addProductResponseDto)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }

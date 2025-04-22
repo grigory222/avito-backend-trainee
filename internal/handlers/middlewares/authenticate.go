@@ -2,35 +2,14 @@ package middlewares
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/grigory222/avito-backend-trainee/internal/handlers/common"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/dto"
+	myjwt "github.com/grigory222/avito-backend-trainee/internal/jwt"
 	"net/http"
 	"strings"
 )
 
-type Claims struct {
-	// Встроенные стандартные claims
-	jwt.RegisteredClaims
-
-	// Кастомные claims
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
-}
-
-type contextKey string
-
-const UserIDKey = contextKey("user_id")
-const ClaimsKey = contextKey("claims")
-
-func writeError(w http.ResponseWriter, status int, errorDto dto.ErrorDto) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(errorDto)
-}
-
-func AuthenticateMiddleware(secret string) func(http.Handler) http.Handler {
+func AuthenticateMiddleware(provider *myjwt.Provider) func(http.Handler) http.Handler {
 	skipPaths := map[string]bool{
 		"/login":      true,
 		"/register":   true,
@@ -46,29 +25,19 @@ func AuthenticateMiddleware(secret string) func(http.Handler) http.Handler {
 
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-				writeError(w, http.StatusUnauthorized, dto.MissingOrInvalidToken)
+				common.WriteError(w, http.StatusUnauthorized, dto.MissingOrInvalidToken)
 				return
 			}
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-			// Разбираем и проверяем токен с кастомными claims
-			claims := &Claims{}
-			token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-				// Убедимся, что используется HMAC
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-				}
-				return []byte(secret), nil
-			})
-
-			if err != nil || !token.Valid {
-				writeError(w, http.StatusUnauthorized, dto.UnauthorizedError)
+			claims, err := provider.VerifyToken(tokenStr)
+			if err != nil {
+				common.WriteError(w, http.StatusUnauthorized, dto.UnauthorizedError)
 				return
 			}
 
-			// Кладём user_id в контекст
-			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
+			ctx := context.WithValue(r.Context(), common.ClaimsKey, claims)
 			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)

@@ -25,3 +25,9 @@ type ReceptionRepository interface {
 	UpdateReceptionStatus(recId, status string) (models.Reception, error)
 	//GetReceptionsByPVZIds(pvzIds []string, startDate, endDate *time.Time) ([]models.Reception, error)
 }
+
+type UserRepository interface {
+	AddNewUser(email, passwordHash, role string) (models.User, error)
+	GetUserByEmailAndPassword(email, passwordHash string) (models.User, error)
+	GetUserByEmail(email string) (models.User, error)
+}

@@ -1,26 +1,29 @@
 package middlewares
 
 import (
+	"github.com/grigory222/avito-backend-trainee/internal/handlers/common"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/dto"
+	myjwt "github.com/grigory222/avito-backend-trainee/internal/jwt"
 	"net/http"
 )
 
 func AuthorizeMiddleware(requiredRole string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			claims, ok := r.Context().Value(ClaimsKey).(*Claims)
+			claims, ok := r.Context().Value(common.ClaimsKey).(*myjwt.Claims)
 			if !ok || claims == nil {
-				writeError(w, http.StatusUnauthorized, dto.UnauthorizedError)
+				common.WriteError(w, http.StatusUnauthorized, dto.UnauthorizedError)
 				return
 			}
-			if claims.UserID == "" {
-				writeError(w, http.StatusUnauthorized, dto.NoUserIDProvided)
+
+			if _, err := claims.GetSubject(); err != nil {
+				common.WriteError(w, http.StatusUnauthorized, dto.NoUserIDProvided)
 				return
 			}
 
 			// Проверка роли
 			if claims.Role != requiredRole {
-				writeError(w, http.StatusForbidden, dto.ForbiddenError)
+				common.WriteError(w, http.StatusForbidden, dto.ForbiddenError)
 				return
 			}
 

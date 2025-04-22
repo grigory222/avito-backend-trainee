@@ -11,6 +11,7 @@ type (
 		HTTP HTTP
 		Log  Log
 		DB   DB
+		JWT  JWT
 	}
 
 	HTTP struct {
@@ -28,6 +29,10 @@ type (
 		User     string `env:"DB_USER,required"`
 		Name     string `env:"DB_NAME,required"`
 		Password string `env:"DB_PASSWORD,required"`
+	}
+
+	JWT struct {
+		Secret string `env:"JWT_SECRET,required"`
 	}
 )
 

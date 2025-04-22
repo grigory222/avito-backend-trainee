@@ -44,7 +44,7 @@ func (pvzRepo *PVZRepository) GetPVZById(pvzId string) (models.PVZ, error) {
 	return pvz, nil
 }
 
-func (r *PVZRepository) GetFlatPVZRows(startDate, endDate time.Time, offset, limit int) ([]models.FlatRow, error) {
+func (pvzRepo *PVZRepository) GetFlatPVZRows(startDate, endDate time.Time, offset, limit int) ([]models.FlatRow, error) {
 	sql := `
 		WITH filtered_pvzs AS (
 			SELECT DISTINCT pvzs.id
@@ -74,7 +74,7 @@ func (r *PVZRepository) GetFlatPVZRows(startDate, endDate time.Time, offset, lim
 		ORDER BY p.id, r.id, pr.id;
 	`
 
-	rows, err := r.db.Query(sql, startDate, endDate, offset, limit)
+	rows, err := pvzRepo.db.Query(sql, startDate, endDate, offset, limit)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/grigory222/avito-backend-trainee/config"
 	"github.com/grigory222/avito-backend-trainee/internal/db"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers"
+	myjwt "github.com/grigory222/avito-backend-trainee/internal/jwt"
 	"github.com/grigory222/avito-backend-trainee/internal/repo"
 	"github.com/grigory222/avito-backend-trainee/internal/usecases"
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"
@@ -33,13 +34,18 @@ func Run(cfg *config.Config) {
 	userRepo := repo.NewUserRepository(pg)
 	pvzRepo := repo.NewPVZRepository(pg)
 	receptionRepo := repo.NewReceptionRepository(pg)
-
 	l.Debug("Repositories created: ", productRepo, userRepo, pvzRepo, receptionRepo)
+
+	// JWT Provider
+	jwtProvider := myjwt.NewJwtProvider(cfg.JWT)
 
 	// создать сервисы
 	productService := usecases.NewProductService(productRepo, receptionRepo, pvzRepo)
+	pvzService := usecases.NewPVZService(pvzRepo, receptionRepo, productRepo)
+	recService := usecases.NewReceptionService(pvzRepo, receptionRepo)
+	userService := usecases.NewUserService(userRepo)
 
-	srv := handlers.NewServer(cfg, l, productService)
+	srv := handlers.NewServer(cfg, l, jwtProvider, productService, pvzService, recService, userService)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
