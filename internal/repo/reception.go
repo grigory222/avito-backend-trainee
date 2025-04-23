@@ -16,7 +16,7 @@ func NewReceptionRepository(db *sqlx.DB) *ReceptionRepository {
 }
 
 func (recRepo *ReceptionRepository) AddReception(pvzId string) (models.Reception, error) {
-	sql := "INSERT INTO receptions (pvz_id) VALUES ($1, $2) RETURNING id, date_time, pvz_id, status"
+	sql := "INSERT INTO receptions (pvz_id) VALUES ($1) RETURNING id, date_time, pvz_id, status"
 	reception := models.Reception{}
 	err := recRepo.db.QueryRow(sql, pvzId).Scan(
 		&reception.Id,

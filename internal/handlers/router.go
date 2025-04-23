@@ -14,6 +14,8 @@ func NewServer(cfg *config.Config, log *logger.Logger, provider *myjwt.Provider,
 	mux := http.NewServeMux()
 
 	ph := NewProductHandler(ps, log)
+	rh := NewReceptionHandler(rs, log)
+	pvzh := NewPVZHandler(pvzs, log)
 
 	employeeHandler := middlewares.AuthorizeMiddleware(dto.RoleEmployee)
 	moderatorHandler := middlewares.AuthorizeMiddleware(dto.RoleModerator)
@@ -30,6 +32,23 @@ func NewServer(cfg *config.Config, log *logger.Logger, provider *myjwt.Provider,
 		),
 	)
 	mux.Handle("/products", productHandlerChain)
+
+	receptionHandlerChain := postHandler(
+		employeeHandler(
+			middlewares.DecoderMiddleware[dto.CreateReceptionRequestDto]()(
+				http.HandlerFunc(rh.AddReception),
+			),
+		),
+	)
+	mux.Handle("/receptions", receptionHandlerChain)
+
+	pvzHandlerChain := postHandler(
+		moderatorHandler(
+			middlewares.DecoderMiddleware[dto.PVZDto]()(
+				http.HandlerFunc(pvzh.AddPVZ)),
+		),
+	)
+	mux.Handle("/pvz", pvzHandlerChain)
 
 	// AuthenticateMiddleware на всё (исключения внутри)
 	handler := middlewares.AuthenticateMiddleware(provider)(mux)

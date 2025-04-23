@@ -25,10 +25,7 @@ func (ps *ProductService) AddProduct(productType, pvzId string) (models.Product,
 
 	// проверить статус последней приёмки
 	reception, err := ps.recRepo.GetLastReception(pvzId)
-	if err != nil {
-		return models.Product{}, err
-	}
-	if reception.Status != models.INPROGRESS {
+	if err != nil || reception.Status != models.INPROGRESS {
 		return models.Product{}, models.ErrNoActiveReception
 	}
 

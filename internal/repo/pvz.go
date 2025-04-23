@@ -18,7 +18,7 @@ func NewPVZRepository(db *sqlx.DB) *PVZRepository {
 
 // AddPVZ создание ПВЗ
 func (pvzRepo *PVZRepository) AddPVZ(city string) (models.PVZ, error) {
-	sql := "INSERT INTO pvz (city) VALUES ($1) RETURNING id, registration_date, city"
+	sql := "INSERT INTO pvzs (city) VALUES ($1) RETURNING id, registration_date, city"
 	pvz := models.PVZ{}
 	err := pvzRepo.db.QueryRow(sql, city).Scan(
 		&pvz.Id,
@@ -32,7 +32,7 @@ func (pvzRepo *PVZRepository) AddPVZ(city string) (models.PVZ, error) {
 
 // GetPVZById получение ПВЗ по id
 func (pvzRepo *PVZRepository) GetPVZById(pvzId string) (models.PVZ, error) {
-	sql := "SELECT * FROM pvz WHERE id = $1"
+	sql := "SELECT * FROM pvzs WHERE id = $1"
 	pvz := models.PVZ{}
 	err := pvzRepo.db.QueryRow(sql, pvzId).Scan(
 		&pvz.Id,
