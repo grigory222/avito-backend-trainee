@@ -42,13 +42,21 @@ func NewServer(cfg *config.Config, log *logger.Logger, provider *myjwt.Provider,
 	)
 	mux.Handle("/receptions", receptionHandlerChain)
 
-	pvzHandlerChain := postHandler(
-		moderatorHandler(
-			middlewares.DecoderMiddleware[dto.PVZDto]()(
-				http.HandlerFunc(pvzh.AddPVZ)),
-		),
-	)
-	mux.Handle("/pvz", pvzHandlerChain)
+	pvzHandler := moderatorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			moderatorHandler(
+				middlewares.DecoderMiddleware[dto.PVZDto]()(
+					http.HandlerFunc(pvzh.AddPVZ),
+				),
+			).ServeHTTP(w, r)
+		case http.MethodGet:
+			moderatorHandler(http.HandlerFunc(pvzh.GetPVZ)).ServeHTTP(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}))
+	mux.Handle("/pvz", pvzHandler)
 
 	// AuthenticateMiddleware на всё (исключения внутри)
 	handler := middlewares.AuthenticateMiddleware(provider)(mux)

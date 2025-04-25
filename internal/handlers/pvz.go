@@ -6,6 +6,8 @@ import (
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/dto"
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type PVZHandler struct {
@@ -47,5 +49,67 @@ func (h *PVZHandler) AddPVZ(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PVZHandler) GetPVZ(w http.ResponseWriter, r *http.Request) {
+	startDateParam, startDateParsingError := getQueryParam(r, "startDate", "")
+	endDateParam, endDateParsingError := getQueryParam(r, "endDate", "")
+	if startDateParsingError != nil || endDateParsingError != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: "Ошибка чтения параметра даты"})
+		return
+	}
 
+	startDate, startDateConvError := convertToDate(startDateParam)
+	endDate, endDateConvError := convertToDate(endDateParam)
+	if startDateConvError != nil || endDateConvError != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: "Время должно быть в формате RFC3339: 2006-01-02T15:04:05Z07:00"})
+		return
+	}
+
+	page, pageParsingError := getQueryParam(r, "page", 1)
+	limit, limitParsingError := getQueryParam(r, "limit", 10)
+
+	if pageParsingError != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: "Ошибка в параметре page"})
+		return
+	}
+	if limitParsingError != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: "Ошибка в параметре limit"})
+		return
+	}
+
+	pagination, err := h.service.GetPVZWithPagination(&startDate, &endDate, page, limit)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, dto.ErrorDto{Message: err.Error()})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(pagination)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+}
+
+func convertToDate(s string) (time.Time, error) {
+	date, err := time.Parse(time.RFC3339, s)
+	return date, err
+}
+
+func getQueryParam[T any](r *http.Request, key string, defaultValue T) (T, error) {
+	value := r.URL.Query().Get(key)
+
+	if value == "" {
+		return defaultValue, nil
+	}
+
+	switch any(defaultValue).(type) {
+	case string:
+		return any(value).(T), nil
+	case int:
+		num, err := strconv.Atoi(value)
+		if err != nil {
+			return defaultValue, err
+		}
+		return any(num).(T), nil
+	default:
+		return defaultValue, nil
+	}
 }
