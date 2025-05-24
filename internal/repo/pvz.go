@@ -45,13 +45,22 @@ func (pvzRepo *PVZRepository) GetPVZById(pvzId string) (models.PVZ, error) {
 }
 
 func (pvzRepo *PVZRepository) GetFlatPVZRows(startDate, endDate time.Time, offset, limit int) ([]models.FlatRow, error) {
+	//sql := `SELECT DISTINCT pvzs.id
+	//		FROM pvzs
+	//		JOIN receptions ON pvzs.id = receptions.pvz_id
+	//		JOIN products ON receptions.id = products.reception_id
+	//		WHERE products.date_time BETWEEN $1 AND $2
+	//		ORDER BY pvzs.id
+	//		OFFSET $3
+	//		LIMIT $4`
+
 	sql := `
 		WITH filtered_pvzs AS (
 			SELECT DISTINCT pvzs.id
 			FROM pvzs
 			JOIN receptions ON pvzs.id = receptions.pvz_id
-			JOIN products ON receptions.id = products.reception_id
-			WHERE products.date_time BETWEEN $1 AND $2
+			LEFT JOIN products ON receptions.id = products.reception_id
+			WHERE receptions.date_time BETWEEN $1 AND $2
 			ORDER BY pvzs.id
 			OFFSET $3
 			LIMIT $4
@@ -69,8 +78,8 @@ func (pvzRepo *PVZRepository) GetFlatPVZRows(startDate, endDate time.Time, offse
 		FROM filtered_pvzs f
 		JOIN pvzs p ON p.id = f.id
 		JOIN receptions r ON p.id = r.pvz_id
-		JOIN products pr ON r.id = pr.reception_id
-		WHERE pr.date_time BETWEEN $1 AND $2
+		LEFT JOIN products pr ON r.id = pr.reception_id
+		WHERE r.date_time BETWEEN $1 AND $2
 		ORDER BY p.id, r.id, pr.id;
 	`
 

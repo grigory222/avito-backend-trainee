@@ -89,7 +89,6 @@ func (ps *PVZService) GetPVZWithPagination(startDate, endDate *time.Time, page, 
 	if err != nil {
 		return nil, err
 	}
-
 	pvzMap := make(map[string]*models.PVZWithReceptions)
 	for _, row := range rows {
 		// найти или создать ПВЗ
@@ -127,12 +126,19 @@ func (ps *PVZService) GetPVZWithPagination(startDate, endDate *time.Time, page, 
 		}
 
 		// добавить товар
-		recPtr.Products = append(recPtr.Products, models.Product{
-			Id:          row.ProductId,
-			DateTime:    row.ProductDate,
-			Type:        row.ProductType,
-			ReceptionId: row.ReceptionId,
-		})
+		var rowProductId, rowProductDate, rowProductType string
+		if row.ProductId.Valid && row.ProductDate.Valid && row.ProductType.Valid {
+			rowProductId = row.ProductId.String
+			rowProductDate = row.ProductDate.String
+			rowProductType = row.ProductType.String
+
+			recPtr.Products = append(recPtr.Products, models.Product{
+				Id:          rowProductId,
+				DateTime:    rowProductDate,
+				Type:        rowProductType,
+				ReceptionId: row.ReceptionId,
+			})
+		}
 	}
 
 	// собрать слайс

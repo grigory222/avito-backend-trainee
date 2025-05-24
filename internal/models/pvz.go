@@ -1,5 +1,7 @@
 package models
 
+import "database/sql"
+
 type PVZ struct {
 	Id               string `db:"id"`
 	RegistrationDate string `db:"registration_date"`
@@ -18,7 +20,7 @@ type FlatRow struct {
 	ReceptionId      string
 	ReceptionDate    string
 	Status           string
-	ProductId        string
-	ProductDate      string
-	ProductType      string
+	ProductId        sql.NullString
+	ProductDate      sql.NullString
+	ProductType      sql.NullString
 }

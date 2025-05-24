@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/common"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers/dto"
-	myjwt "github.com/grigory222/avito-backend-trainee/internal/jwt"
+	"github.com/grigory222/avito-backend-trainee/internal/myjwt"
 	"net/http"
 )
 

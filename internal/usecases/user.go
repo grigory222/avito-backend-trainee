@@ -27,7 +27,7 @@ func (us *UserService) UserRegister(email, password, role string) (models.User, 
 	if err == nil {
 		return models.User{}, models.ErrUserAlreadyExists
 	}
-	user, err := us.userRepo.AddNewUser(email, password, role)
+	user, err := us.userRepo.AddNewUser(email, hash(password), role)
 	if err != nil {
 		return models.User{}, err
 	}

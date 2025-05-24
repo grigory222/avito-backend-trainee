@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/grigory222/avito-backend-trainee/config"
+	"time"
 )
 
+const TimeToLive = 24 * time.Hour
+
 type Claims struct {
-	// Встроенные стандартные claims
 	jwt.RegisteredClaims
 
-	// Кастомные claims
-	//UserID string `json:"sub"` - встроенный
 	Role string `json:"role"`
 }
 
@@ -24,9 +24,20 @@ func NewJwtProvider(cfg config.JWT) *Provider {
 	return &Provider{[]byte(cfg.Secret)}
 }
 
-//func (provider *Provider) GenerateToken(user models.User, role string) (string, error) {
-//
-//}
+func (provider *Provider) GenerateTokenWithRole(role string) (string, error) {
+	now := time.Now()
+	claims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(TimeToLive)),
+		},
+		Role: role,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString(provider.secret)
+}
 
 func (provider *Provider) VerifyToken(tokenStr string) (*Claims, error) {
 	claims := &Claims{}

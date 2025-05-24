@@ -6,7 +6,7 @@ import (
 	"github.com/grigory222/avito-backend-trainee/config"
 	"github.com/grigory222/avito-backend-trainee/internal/db"
 	"github.com/grigory222/avito-backend-trainee/internal/handlers"
-	myjwt "github.com/grigory222/avito-backend-trainee/internal/jwt"
+	"github.com/grigory222/avito-backend-trainee/internal/myjwt"
 	"github.com/grigory222/avito-backend-trainee/internal/repo"
 	"github.com/grigory222/avito-backend-trainee/internal/usecases"
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"

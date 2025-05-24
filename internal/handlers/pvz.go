@@ -7,6 +7,7 @@ import (
 	"github.com/grigory222/avito-backend-trainee/pkg/logger"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -86,6 +87,65 @@ func (h *PVZHandler) GetPVZ(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
+}
+
+func (h *PVZHandler) CloseLastReception(w http.ResponseWriter, r *http.Request) {
+	prefix := "/pvz/"
+	suffix := "/close_last_reception"
+
+	path := r.URL.Path
+	if !strings.HasPrefix(path, prefix) || !strings.HasSuffix(path, suffix) {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	pvzIdStr := strings.TrimSuffix(strings.TrimPrefix(path, prefix), suffix)
+	pvzIdStr = strings.Trim(pvzIdStr, "/")
+
+	if pvzIdStr == "" {
+		http.Error(w, "pvzId is missing", http.StatusBadRequest)
+		return
+	}
+
+	reception, err := h.service.CloseLastReception(pvzIdStr)
+	if err != nil {
+		h.logger.Error("Failed to close last reception: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(dto.ErrorDto{Message: "Неверный запрос или приемка уже закрыта"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(reception)
+}
+
+func (h *PVZHandler) DeleteLastProduct(w http.ResponseWriter, r *http.Request) {
+	prefix := "/pvz/"
+	suffix := "/delete_last_product"
+
+	path := r.URL.Path
+	if !strings.HasPrefix(path, prefix) || !strings.HasSuffix(path, suffix) {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	pvzIdStr := strings.TrimSuffix(strings.TrimPrefix(path, prefix), suffix)
+	pvzIdStr = strings.Trim(pvzIdStr, "/")
+
+	if pvzIdStr == "" {
+		http.Error(w, "pvzId is missing", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.DeleteLastProduct(pvzIdStr)
+	if err != nil {
+		h.logger.Error("Failed to delete last product: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(dto.ErrorDto{Message: "Неверный запрос, нет активной приемки или нет товаров для удаления"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func convertToDate(s string) (time.Time, error) {
