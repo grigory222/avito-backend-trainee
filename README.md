@@ -1,3 +1,7 @@
+[![Go](https://img.shields.io/badge/Go-1.24-blue?logo=go)](https://go.dev/)
+[![Build](https://img.shields.io/github/actions/workflow/status/grigory222/avito-backend-trainee/go.yml?branch=main)](https://github.com/grigory222/avito-backend-trainee/actions)
+[![License](https://img.shields.io/github/license/grigory222/avito-backend-trainee)](LICENSE)
+
 # avito-backend-trainee
 Решение тестового задания для стажировки в Авито
 
