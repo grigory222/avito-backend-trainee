@@ -8,7 +8,7 @@
 Посмотреть задание можно [тут](docs/Backend-trainee-assignment-spring-2025.md) \
 Посмотреть спецификацию можно [тут](docs/swagger.yaml)
 
-## Запуск приложение
+## Запуск приложения
 1. Склонируйте приложение
     ```bash
    git clone https://github.com/grigory222/avito-backend-trainee.git
