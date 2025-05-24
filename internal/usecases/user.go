@@ -16,7 +16,7 @@ func NewUserService(userRepo UserRepository) *UserService {
 	}
 }
 
-func hash(s string) string {
+func Hash(s string) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(s))
 	return hex.EncodeToString(hasher.Sum(nil))
@@ -27,7 +27,7 @@ func (us *UserService) UserRegister(email, password, role string) (models.User, 
 	if err == nil {
 		return models.User{}, models.ErrUserAlreadyExists
 	}
-	user, err := us.userRepo.AddNewUser(email, hash(password), role)
+	user, err := us.userRepo.AddNewUser(email, Hash(password), role)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -35,5 +35,5 @@ func (us *UserService) UserRegister(email, password, role string) (models.User, 
 }
 
 func (us *UserService) UserLogin(email, password string) (models.User, error) {
-	return us.userRepo.GetUserByEmailAndPassword(email, hash(password))
+	return us.userRepo.GetUserByEmailAndPassword(email, Hash(password))
 }

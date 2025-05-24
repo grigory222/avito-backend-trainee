@@ -1,6 +1,8 @@
 package usecases
 
-import "github.com/grigory222/avito-backend-trainee/internal/models"
+import (
+	"github.com/grigory222/avito-backend-trainee/internal/models"
+)
 
 type ProductService struct {
 	prodRepo ProductRepository

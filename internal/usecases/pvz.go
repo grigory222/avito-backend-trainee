@@ -131,14 +131,14 @@ func (ps *PVZService) GetPVZWithPagination(startDate, endDate *time.Time, page, 
 			rowProductId = row.ProductId.String
 			rowProductDate = row.ProductDate.String
 			rowProductType = row.ProductType.String
-
-			recPtr.Products = append(recPtr.Products, models.Product{
-				Id:          rowProductId,
-				DateTime:    rowProductDate,
-				Type:        rowProductType,
-				ReceptionId: row.ReceptionId,
-			})
 		}
+
+		recPtr.Products = append(recPtr.Products, models.Product{
+			Id:          rowProductId,
+			DateTime:    rowProductDate,
+			Type:        rowProductType,
+			ReceptionId: row.ReceptionId,
+		})
 	}
 
 	// собрать слайс
